@@ -1,5 +1,5 @@
 import { db, storage } from './firebase';
-import { collection, getDocs, query, where, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, addDoc, updateDoc, deleteDoc, increment, orderBy, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Product } from '../types/product';
 
@@ -88,4 +88,58 @@ export async function uploadImage(file: File): Promise<string> {
     console.error('Error uploading image:', error);
     throw error;
   }
+}
+
+// New functions for categories
+
+export async function getCategories(): Promise<{ id: string, name: string }[]> {
+  try {
+    const categoriesRef = collection(db, 'categories');
+    const snapshot = await getDocs(categoriesRef);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name
+    }));
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+}
+
+export async function addCategory(name: string): Promise<void> {
+  try {
+    const categoriesRef = collection(db, 'categories');
+    await addDoc(categoriesRef, { name });
+  } catch (error) {
+    console.error('Error adding category:', error);
+  }
+}
+
+export async function updateCategory(id: string, name: string): Promise<void> {
+  try {
+    const categoryRef = doc(db, 'categories', id);
+    await updateDoc(categoryRef, { name });
+  } catch (error) {
+    console.error('Error updating category:', error);
+  }
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  try {
+    const categoryRef = doc(db, 'categories', id);
+    await deleteDoc(categoryRef);
+  } catch (error) {
+    console.error('Error deleting category:', error);
+  }
+}
+
+export async function getPopularProducts(limitCount: number): Promise<Product[]> {
+  const productsRef = collection(db, 'products');
+  const q = query(productsRef, orderBy('views', 'desc'), limit(limitCount));
+  const querySnapshot = await getDocs(q);
+
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Product[];
 }

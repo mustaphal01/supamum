@@ -18,7 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
           height={300}
           className="h-full w-full object-cover object-center"
           priority={false}
-          loading="lazy"
+          loading="lazy" // Add lazy loading
         />
       </div>
       <div className="mt-2">

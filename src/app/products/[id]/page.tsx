@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getProductById } from '../../../lib/db';
+import { getProductById, incrementProductView } from '../../../lib/db';
 import { Phone, Share2, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../../lib/cartContext';
 import { Product } from '../../../types/product';
+import SkeletonLoader from '../../../components/SkeletonLoader';
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -20,6 +21,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
         const { id } = await params;
         const fetchedProduct = await getProductById(id);
         setProduct(fetchedProduct);
+        await incrementProductView(id); // Increment the view count
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
@@ -30,7 +32,11 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   }, [params]);
 
   if (isLoading) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="p-4">
+        <SkeletonLoader />
+      </div>
+    );
   }
 
   if (!product) {
@@ -78,7 +84,8 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 width={500}
                 height={500}
                 className="h-full w-full object-cover"
-                priority
+                priority={false}
+                loading="lazy" // Add lazy loading
               />
             ) : (
               <div className="h-full w-full bg-gray-200 flex items-center justify-center">
@@ -102,6 +109,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                       width={100}
                       height={100}
                       className="h-full w-full object-cover"
+                      loading="lazy" // Add lazy loading
                     />
                   ) : (
                     <div className="h-full w-full bg-gray-200 flex items-center justify-center">
